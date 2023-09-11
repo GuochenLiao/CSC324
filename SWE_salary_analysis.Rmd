@@ -13,3 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library()
 
 ```
+
+1. salary vs swe salary sorted by region -> histogram
+2. swe salary vs rent / house price -> show the percentage -> his + line
+3. swe salary vs #job -> dot graph
