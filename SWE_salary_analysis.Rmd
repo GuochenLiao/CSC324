@@ -4,16 +4,63 @@ author: "Guochen Liao"
 date: "2023-09-11"
 output: html_document
 ---
+Academic Honesty
+Name(s) of all authors: Guochen
+Assignment name: Individual Project
+Assignment due date: TBD
+Written/online sources used: None
+Help obtained (Acknowledgments): None
+Add the statement: We confirm that the above list of sources is complete AND that we have not talked to anyone else about the solution to this problem.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(magrittr)
+library(ggplot2)
+library(qrcode)
+library(lattice)
+library(wordcloud2)
 ```
 
 ```{r}
-library()
+# Read the data from CSV file
+salary_data <- read_csv("SweSalaries.csv", skip = 1, col_names = c("Index", "Metro", "MeanSalaryAdjusted", "MeanSalaryUnadjusted", "MeanSalary", "NumberJobs", "HomePrice", "City", "LivingCost", "Rent", "PlusRent", "PurPower"))
+
+# Separate city and state into two different columns
+salary_data <- salary_data %>%
+  separate(City, into = c("City_Name", "State_Name"), sep = ", ")
+
+# Group data by state and calculate the average for the relevant columns
+state_aggregated_data <- salary_data %>%
+  group_by(State_Name) %>%
+  summarise(
+    Avg_MeanSalaryAdjusted = mean(MeanSalaryAdjusted, na.rm = TRUE),
+    Avg_MeanSalary = mean(MeanSalary, na.rm = TRUE),
+    Avg_HomePrice = mean(HomePrice, na.rm = TRUE),
+    Avg_LivingCost = mean(LivingCost, na.rm = TRUE),
+    Avg_Rent = mean(Rent, na.rm = TRUE),
+    Avg_NumberJobs = mean(NumberJobs, na.rm = TRUE),
+    Avg_PurPower = mean(PurPower, na.rm = TRUE)
+  )
+
+# Extract the top 10 states based on the average MeanSalaryAdjusted
+top_10_states <- state_aggregated_data %>%
+  arrange(desc(Avg_MeanSalaryAdjusted)) %>%
+  head(10) 
+
+# Plot the average MeanSalaryAdjusted for these top 10 states in a histogram
+ggplot(top_10_states, aes(x = reorder(State_Name, Avg_MeanSalaryAdjusted), y = Avg_MeanSalaryAdjusted)) +
+  geom_bar(stat = "identity", fill = "aquamarine", color = "black") +
+  geom_bar(aes(y = Avg_MeanSalary), stat = "identity", fill = "orange", color = "black", alpha = 0.5) +
+  xlab("State") +
+  ylab("Average Mean Salaries") +
+  ggtitle("Top 10 States by Average Mean Adjusted Salary")
+
 
 ```
 
-1. salary vs swe salary sorted by region -> histogram
+
 2. swe salary vs rent / house price -> show the percentage -> his + line
 3. swe salary vs #job -> dot graph
