@@ -26,7 +26,7 @@ library(wordcloud2)
 
 ```{r}
 # Read the data from CSV file
-salary_data <- read_csv("SweSalaries.csv", skip = 1, col_names = c("Index", "Metro", "MeanSalaryAdjusted", "MeanSalaryUnadjusted", "MeanSalary", "NumberJobs", "HomePrice", "City", "LivingCost", "Rent", "PlusRent", "PurPower"))
+salary_data <- read_csv("SweSalaries.csv")
 
 # Separate city and state into two different columns
 salary_data <- salary_data %>%
@@ -61,6 +61,33 @@ ggplot(top_10_states, aes(x = reorder(State_Name, Avg_MeanSalaryAdjusted), y = A
 
 ```
 
+```{r}
+# Read the data from the CSV file
+salary_data <- read_csv("SweSalaries.csv")
 
-2. swe salary vs rent / house price -> show the percentage -> his + line
-3. swe salary vs #job -> dot graph
+# Create a scatter plot with MeanSalary on the x-axis and HomePrice on the y-axis
+ggplot(salary_data, aes(x = MeanSalary, y = HomePrice)) +
+  geom_point() + 
+  geom_smooth(method = "lm", col = "red") +
+  xlab("Mean Salary") +
+  ylab("HomePrice") +
+  ggtitle("Scatterplot of HomePrice vs Mean Salary") +
+  theme_minimal()
+```
+
+```{r}
+# Read the data from the CSV file
+salary_data <- read_csv("SweSalaries.csv")
+
+# Calculate the rent to mean salary adjusted ratio
+salary_data <- salary_data %>% mutate(RentToSalaryRatio = Rent * 12 / MeanSalaryAdjusted)
+
+# Create a bubble plot
+ggplot(salary_data, aes(x = MeanSalaryAdjusted, y = Rent, size = RentToSalaryRatio)) +
+  geom_point(alpha = 0.6) +
+  scale_size(range = c(1, 20)) +
+  xlab("Mean Salary Adjusted") +
+  ylab("Rent") +
+  ggtitle("Bubble Plot of Rent vs Mean Salary Adjusted") +
+  theme_minimal()
+```
