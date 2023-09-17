@@ -28,6 +28,19 @@ library(wordcloud2)
 # Read the data from CSV file
 salary_data <- read_csv("SweSalaries.csv")
 
+# Calculate the average rent ratio for SWE careers and all careers
+average_ratios <- salary_data %>%
+  summarise(
+    Avg_Rent_Ratio_SWE = mean(Rent * 12/ MeanSalaryAdjusted, na.rm = TRUE),
+    Avg_Rent_Ratio_All_Careers = mean(Rent * 12/ MeanSalary, na.rm = TRUE)
+  )
+print(average_ratios)
+```
+
+```{r}
+# Read the data from CSV file
+salary_data <- read_csv("SweSalaries.csv")
+
 # Separate city and state into two different columns
 salary_data <- salary_data %>%
   separate(City, into = c("City_Name", "State_Name"), sep = ", ")
@@ -80,12 +93,13 @@ ggplot(salary_data, aes(x = MeanSalary, y = HomePrice)) +
 salary_data <- read_csv("SweSalaries.csv")
 
 # Calculate the rent to mean salary adjusted ratio
-salary_data <- salary_data %>% mutate(RentToSalaryRatio = Rent * 12 / MeanSalaryAdjusted)
+salary_data <- salary_data %>% mutate(RentToSalaryRatio = (Rent * 12) / MeanSalaryAdjusted)
 
 # Create a bubble plot
-ggplot(salary_data, aes(x = MeanSalaryAdjusted, y = Rent, size = RentToSalaryRatio)) +
+ggplot(salary_data, aes(x = MeanSalaryAdjusted, y = Rent, size = RentToSalaryRatio, colour = RentToSalaryRatio)) +
   geom_point(alpha = 0.6) +
-  scale_size(range = c(1, 20)) +
+  scale_size(range = c(1, 10)) +
+  scale_colour_gradient(low = "blue", high = "red") +
   xlab("Mean Salary Adjusted") +
   ylab("Rent") +
   ggtitle("Bubble Plot of Rent vs Mean Salary Adjusted") +
