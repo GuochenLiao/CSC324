@@ -84,8 +84,7 @@ ggplot(salary_data, aes(x = MeanSalary, y = HomePrice)) +
   geom_smooth(method = "lm", col = "red") +
   xlab("Mean Salary") +
   ylab("HomePrice") +
-  ggtitle("Scatterplot of HomePrice vs Mean Salary") +
-  theme_minimal()
+  ggtitle("Scatterplot of HomePrice vs Mean Salary") 
 ```
 
 ```{r}
@@ -102,6 +101,5 @@ ggplot(salary_data, aes(x = MeanSalaryAdjusted, y = Rent, size = RentToSalaryRat
   scale_colour_gradient(low = "blue", high = "red") +
   xlab("Mean Salary Adjusted") +
   ylab("Rent") +
-  ggtitle("Bubble Plot of Rent vs Mean Salary Adjusted") +
-  theme_minimal()
+  ggtitle("Bubble Plot of Rent vs Mean Salary Adjusted") 
 ```
