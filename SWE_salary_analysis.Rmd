@@ -148,10 +148,10 @@ ui <- fluidPage(
   titlePanel("SWE Salary Analysis"),
   sidebarLayout(
     sidebarPanel(
-      numericInput("minSalaryAdjusted", "Min Mean SWE Salary:", value = NULL),
-      numericInput("maxSalaryAdjusted", "Max Mean SWE Salary:", value = NULL),
-      numericInput("minRent", "Min Rent:", value = NULL),
-      numericInput("maxRent", "Max Rent:", value = NULL),
+      numericInput("minSalaryAdjusted", "Min Mean Salary Adjusted:", min = 0, max = max(us_states$MeanSalaryAdjusted, na.rm = TRUE), value = 0),
+      numericInput("maxSalaryAdjusted", "Max Mean Salary Adjusted:", min = 0, max = max(us_states$MeanSalaryAdjusted, na.rm = TRUE), value = max(us_states$MeanSalaryAdjusted, na.rm = TRUE)),
+      numericInput("minRent", "Min Rent:", min = 0, max = max(us_states$Rent, na.rm = TRUE), value = 0),
+      numericInput("maxRent", "Max Rent:", min = 0, max = max(us_states$Rent, na.rm = TRUE), value = max(us_states$Rent, na.rm = TRUE)),
       # Add more pairs of numeric inputs for other columns as needed
       actionButton("applyFilter", "Filter") # Add 'Filter' action button
     ),
@@ -161,6 +161,7 @@ ui <- fluidPage(
     )
   )
 )
+
 
 
 # Transform the datum of us_states to +proj=longlat +datum=WGS84
