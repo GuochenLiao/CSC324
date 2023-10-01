@@ -22,6 +22,10 @@ library(ggplot2)
 library(qrcode)
 library(lattice)
 library(wordcloud2)
+library(shiny)
+library(leaflet)
+library(maps)
+library(sf)
 ```
 
 ```{r}
@@ -102,4 +106,115 @@ ggplot(salary_data, aes(x = MeanSalaryAdjusted, y = Rent, size = RentToSalaryRat
   xlab("Mean Salary Adjusted") +
   ylab("Rent") +
   ggtitle("Bubble Plot of Rent vs Mean Salary Adjusted") 
+```
+
+```{R}
+library(shiny)
+library(leaflet)
+library(dplyr)
+library(stringr)
+library(sf)
+
+# Load the dataset
+data <- read.csv("SweSalaries.csv")
+
+# Extract state abbreviation from City column
+data$State <- str_extract(data$City, "[A-Z]{2}$")
+
+# Aggregate and average the numerical data by state
+aggregated_data <- data %>%
+  group_by(State) %>%
+  summarize(
+    MeanSalaryAdjusted = mean(MeanSalaryAdjusted, na.rm = TRUE),
+    MeanSalaryUnadjusted = mean(MeanSalaryUnadjusted, na.rm = TRUE),
+    MeanSalary = mean(MeanSalary, na.rm = TRUE),
+    NumberJobs = mean(NumberJobs, na.rm = TRUE),
+    HomePrice = mean(HomePrice, na.rm = TRUE),
+    LivingCost = mean(LivingCost, na.rm = TRUE),
+    Rent = mean(Rent, na.rm = TRUE),
+    PlusRent = mean(PlusRent, na.rm = TRUE),
+    PurPower = mean(PurPower, na.rm = TRUE)
+  )
+
+# Read the shapefile
+us_states <- st_read("cb_2018_us_state_20m/cb_2018_us_state_20m.shp")
+
+
+# Join aggregated data with shapefile
+us_states <- us_states %>%
+  left_join(aggregated_data, by = c("STUSPS" = "State"))
+
+ui <- fluidPage(
+  titlePanel("SWE Salary Analysis"),
+  sidebarLayout(
+    sidebarPanel(
+      numericInput("minSalaryAdjusted", "Min Mean SWE Salary:", value = NULL),
+      numericInput("maxSalaryAdjusted", "Max Mean SWE Salary:", value = NULL),
+      numericInput("minRent", "Min Rent:", value = NULL),
+      numericInput("maxRent", "Max Rent:", value = NULL),
+      # Add more pairs of numeric inputs for other columns as needed
+      actionButton("applyFilter", "Filter") # Add 'Filter' action button
+    ),
+    mainPanel(
+      leafletOutput("map"),
+      tableOutput("table")
+    )
+  )
+)
+
+
+# Transform the datum of us_states to +proj=longlat +datum=WGS84
+us_states <- st_transform(us_states, 4326)
+
+server <- function(input, output, session) {
+  
+  filtered_states <- reactiveVal(us_states) # Create a reactive value to store the filtered states
+  
+  observeEvent(input$applyFilter, {
+    filtered_states(us_states) # Reset to original states when 'Filter' button is clicked
+    
+    # Apply filters based on input values
+    if(!is.null(input$minSalaryAdjusted))
+      filtered_states(filtered_states() %>% filter(MeanSalaryAdjusted >= input$minSalaryAdjusted))
+    if(!is.null(input$maxSalaryAdjusted))
+      filtered_states(filtered_states() %>% filter(MeanSalaryAdjusted <= input$maxSalaryAdjusted))
+    if(!is.null(input$minRent))
+      filtered_states(filtered_states() %>% filter(Rent >= input$minRent))
+    if(!is.null(input$maxRent))
+      filtered_states(filtered_states() %>% filter(Rent <= input$maxRent))
+    # Add more filter conditions for other columns as needed
+  })
+  
+  output$map <- renderLeaflet({
+    leaflet(data = filtered_states()) %>%
+      addTiles() %>%
+      fitBounds(-125, 24.396308, -66.934570, 49.384358) %>%
+      addPolygons(fillColor = "lightgrey",
+                  color = "#BDBDC3", weight = 1,
+                  opacity = 1, fillOpacity = 0.7,
+                  highlight = highlightOptions(weight = 2,
+                                               color = "#666",
+                                               fillOpacity = 0.7,
+                                               bringToFront = TRUE),
+                  popup = ~paste(
+                    "<strong>State:</strong> ", STUSPS, "<br>",
+                    "<strong>Mean Salary Adjusted:</strong> $", round(MeanSalaryAdjusted, 2), "<br>",
+                    "<strong>Mean Salary Unadjusted:</strong> $", round(MeanSalaryUnadjusted, 2), "<br>",
+                    "<strong>Mean Salary:</strong> $", round(MeanSalary, 2), "<br>",
+                    "<strong>Number of Jobs:</strong> ", round(NumberJobs, 2), "<br>",
+                    "<strong>Home Price:</strong> $", round(HomePrice, 2), "<br>",
+                    "<strong>Living Cost:</strong> $", round(LivingCost, 2), "<br>",
+                    "<strong>Rent:</strong> $", round(Rent, 2), "<br>",
+                    "<strong>Plus Rent:</strong> $", round(PlusRent, 2), "<br>",
+                    "<strong>Purchasing Power:</strong> ", round(PurPower, 2)
+                  ),
+                  group = "states")
+  })
+}
+
+
+
+# Run the application
+shinyApp(ui = ui, server = server)
+
 ```
