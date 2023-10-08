@@ -5,7 +5,7 @@ date: "2023-09-11"
 output: html_document
 ---
 Academic Honesty
-Name(s) of all authors: Guochen
+Name(s) of all authors: Guochen Liao
 Assignment name: Individual Project
 Assignment due date: TBD
 Written/online sources used: None
@@ -27,10 +27,11 @@ library(leaflet)
 library(maps)
 library(sf)
 library(shinydashboard)
+library(lubridate)
 ```
 
 ```{r}
-# Read the data from CSV file
+# Read the data from the CSV file
 salary_data <- read_csv("SweSalaries.csv")
 
 # Separate city and state into two different columns
@@ -95,22 +96,39 @@ ggplot(salary_data, aes(x = MeanSalaryAdjusted, y = Rent, size = RentToSalaryRat
   ylab("Rent") +
   ggtitle("Bubble Plot of Rent vs Mean Salary Adjusted") 
 ```
+```{R}
+# Read the data from the CSV file
+salary_data <- read_csv("SweSalaries.csv")
+
+# Create a categorical variable for salary level
+salary_data$SalaryLevel <- cut(salary_data$MeanSalaryAdjusted, breaks = 3, labels = c("Low", "Medium", "High"))
+ggplot(salary_data, aes(x = SalaryLevel, y = LivingCost)) +
+  geom_boxplot() +
+  labs(title = "Box Plot of Living Cost vs Salary Level",
+       x = "Salary Level",
+       y = "Living Cost") +
+  theme_minimal()
+
+```
 
 ```{R}
+# Read the data from the formatted CSV file
 data <- read.csv("CombinedDataFile.csv")
 
-# Read the shapefile
-us_states <- st_read("cb_2018_us_state_20m/cb_2018_us_state_20m.shp")
+# Read the US geographical shapefile
+us_states <- st_read("../US_geographic_dataset/cb_2018_us_state_20m.shp")
 
 
-# Join aggregated data with shapefile
+# Join combined data with shapefile by mapping State abbreviations
 us_states <- us_states %>%
   left_join(data, by = c("STUSPS" = "State"))
 
-
+# UI for the shiny app
 ui <- dashboardPage(
+  # Create a shiny dashboard titled SWE Salary Analysis
   dashboardHeader(title = "SWE Salary Analysis"),
   dashboardSidebar(
+    # Two visualization available, one is the US map, the other one is the Line graph
     sidebarMenu(
       menuItem("Map", tabName = "map", icon = icon("globe")),
       menuItem("Line Graph", tabName = "line_graph", icon = icon("line-chart"))
@@ -118,15 +136,19 @@ ui <- dashboardPage(
   ),
   dashboardBody(
     tabItems(
+      # Sidebar items of the US map
       tabItem(tabName = "map",
               fluidRow(
                 column(width = 3,
+                       # Select the gradation attribute
                         selectInput("attribute", "Choose an attribute:", 
                         choices = colnames(data)[-1],
                         selected = colnames(data)[2]),
+                       # Select the sample filter
                         selectInput("presetFilter", "Choose a preset filter:", 
                         choices = c("No Filter", "High Salary", "Low Rent"), 
                         selected = "No Filter"),
+                       # Number input for filtering
                        numericInput("minSalaryAdjusted", "Min Mean SWE Salary:", min = 0, max = max(data$MeanSalaryAdjusted, na.rm = TRUE), value = 0),
                        numericInput("maxSalaryAdjusted", "Max Mean SWE Salary:", min = 0, max = max(data$MeanSalaryAdjusted, na.rm = TRUE), value = max(data$MeanSalaryAdjusted, na.rm = TRUE)),
                        numericInput("minRent", "Min Rent:", min = 0, max = max(data$Rent, na.rm = TRUE), value = 0),
@@ -139,9 +161,11 @@ ui <- dashboardPage(
               ),
               tableOutput("table")
       ),
+      # Create the line graph
       tabItem(tabName = "line_graph",
               fluidRow(
                 column(width = 3,
+                       # Select the two attributes for the line graph
                        selectInput("attribute1", "Select Attribute 1:", choices = colnames(data)[-1]),
                        selectInput("attribute2", "Select Attribute 2:", choices = colnames(data)[-1]),
                        actionButton("plotGraph", "Plot Graph")
@@ -155,14 +179,15 @@ ui <- dashboardPage(
   )
 )
 
-# Transform the datum of us_states to +proj=longlat +datum=WGS84
+# Transform the data of us_states to WGS84 to fit the package
 us_states <- st_transform(us_states, 4326)
 
-
+# Server for the shiny app
 server <- function(input, output, session) {
-    
-  filtered_states <- reactiveVal(us_states) # Create a reactive value to store the filtered states
+  # Create a reactive value to store the filtered states
+  filtered_states <- reactiveVal(us_states) 
   
+  # Enable instant response by applying observe, update the sample filter
   observe({
     switch(input$presetFilter,
            "No Filter" = {
@@ -188,6 +213,7 @@ server <- function(input, output, session) {
     )
   })
   
+  # Enable manual filter
   observeEvent(input$applyFilter, {
     filtered_states(us_states) # Reset to original states when 'Filter' button is clicked
     
@@ -203,13 +229,15 @@ server <- function(input, output, session) {
     # Add more filter conditions for other columns as needed
   })
   
+  # Output the US map
   output$map <- renderLeaflet({
     # Define a color palette with a specified number of bins
-    bins <- 10  # You can adjust this number as per your requirement
+    bins <- 20 
     pal <- colorBin(palette = "viridis", domain = filtered_states()[[input$attribute]], bins = bins)
     
     leaflet(data = filtered_states()) %>%
     addTiles() %>%
+    # Make the US map at the center of the visualization
     fitBounds(-125, 24.396308, -66.934570, 49.384358) %>%
     addPolygons(fillColor = ~pal(filtered_states()[[input$attribute]]),
                 color = "#BDBDC3", weight = 1,
@@ -218,6 +246,7 @@ server <- function(input, output, session) {
                                              color = "#666",
                                              fillOpacity = 0.7,
                                              bringToFront = TRUE),
+                # Show the attributes of the corresponding state
                 popup = ~paste(
                   "<strong>State:</strong> ", STUSPS, "<br>",
                   "<strong>Mean Salary Adjusted:</strong> $", round(MeanSalaryAdjusted, 2), "<br>",
@@ -233,10 +262,9 @@ server <- function(input, output, session) {
                 group = "states")
   })
 
-  
+  # Output the line graph
   output$linePlot <- renderPlot({
     input$plotGraph
-    
     isolate({
       ggplot(data, aes_string(x = input$attribute1, y = input$attribute2)) +
         geom_point() + 
@@ -251,7 +279,49 @@ server <- function(input, output, session) {
 }
 
 
-# Run the application
+# Run the shiny application
 shinyApp(ui = ui, server = server)
+
+```
+
+```{R}
+# Read the log data from the CSV file
+log_data <- read_csv("../time_logs.csv")
+
+# Extract timestamps from the TIME column
+timestamps <- log_data$TIME
+
+# Extract start and end times strings
+start_str <- sub(" - .*", "", timestamps)
+end_str <- sub(".*- ", "", timestamps)
+
+# Parse start_times with date and time information
+start_times <- as.POSIXct(start_str, format = "%b %d, %I:%M %p", tz = "UTC")
+
+# Extract just the date from start_times
+start_dates <- as.Date(start_times)
+
+# Construct full datetime strings for end_times using the date from start_times
+end_str_full <- paste(start_dates, end_str)
+
+# Parse end_times with date and time information
+end_times <- as.POSIXct(end_str_full, format = "%Y-%m-%d %I:%M %p", tz = "UTC")
+
+# Calculate durations in minutes
+durations <- as.numeric(difftime(end_times, start_times, units = "mins"))
+
+# Create a data frame
+data <- data.frame(
+  Date = start_dates,
+  Duration = durations
+)
+
+# Plot the working time log histogram
+p <- ggplot(data, aes(x = Date, y = Duration)) +
+  geom_col() +
+  labs(x = "Date", y = "Duration(minutes)", title = "Working time log") +
+  theme_minimal()
+
+print(p)
 
 ```
