@@ -63,5 +63,9 @@ The following R libraries are used for processing and visualizing the data:
 - Reduce: Data is aggregated by state to provide a summarized view.
 - Facet: The Shiny app provides multiple views (map and line graph) to allow users to explore different facets of the data.
 
+## 11. Appendix
+- Time Log Chart:
+![Working time logs](https://github.com/Mark-Liao305/CSC324/assets/85295108/7679dd64-78ff-4218-aa8b-af641b26466a)
+
 
 
