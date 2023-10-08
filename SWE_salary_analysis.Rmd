@@ -26,19 +26,7 @@ library(shiny)
 library(leaflet)
 library(maps)
 library(sf)
-```
-
-```{r}
-# Read the data from CSV file
-salary_data <- read_csv("SweSalaries.csv")
-
-# Calculate the average rent ratio for SWE careers and all careers
-average_ratios <- salary_data %>%
-  summarise(
-    Avg_Rent_Ratio_SWE = mean(Rent * 12/ MeanSalaryAdjusted, na.rm = TRUE),
-    Avg_Rent_Ratio_All_Careers = mean(Rent * 12/ MeanSalary, na.rm = TRUE)
-  )
-print(average_ratios)
+library(shinydashboard)
 ```
 
 ```{r}
@@ -109,32 +97,7 @@ ggplot(salary_data, aes(x = MeanSalaryAdjusted, y = Rent, size = RentToSalaryRat
 ```
 
 ```{R}
-library(shiny)
-library(leaflet)
-library(dplyr)
-library(stringr)
-library(sf)
-
-# Load the dataset
-data <- read.csv("SweSalaries.csv")
-
-# Extract state abbreviation from City column
-data$State <- str_extract(data$City, "[A-Z]{2}$")
-
-# Aggregate and average the numerical data by state
-aggregated_data <- data %>%
-  group_by(State) %>%
-  summarize(
-    MeanSalaryAdjusted = mean(MeanSalaryAdjusted, na.rm = TRUE),
-    MeanSalaryUnadjusted = mean(MeanSalaryUnadjusted, na.rm = TRUE),
-    MeanSalary = mean(MeanSalary, na.rm = TRUE),
-    NumberJobs = mean(NumberJobs, na.rm = TRUE),
-    HomePrice = mean(HomePrice, na.rm = TRUE),
-    LivingCost = mean(LivingCost, na.rm = TRUE),
-    Rent = mean(Rent, na.rm = TRUE),
-    PlusRent = mean(PlusRent, na.rm = TRUE),
-    PurPower = mean(PurPower, na.rm = TRUE)
-  )
+data <- read.csv("CombinedDataFile.csv")
 
 # Read the shapefile
 us_states <- st_read("cb_2018_us_state_20m/cb_2018_us_state_20m.shp")
@@ -142,34 +105,88 @@ us_states <- st_read("cb_2018_us_state_20m/cb_2018_us_state_20m.shp")
 
 # Join aggregated data with shapefile
 us_states <- us_states %>%
-  left_join(aggregated_data, by = c("STUSPS" = "State"))
+  left_join(data, by = c("STUSPS" = "State"))
 
-ui <- fluidPage(
-  titlePanel("SWE Salary Analysis"),
-  sidebarLayout(
-    sidebarPanel(
-      numericInput("minSalaryAdjusted", "Min Mean Salary Adjusted:", min = 0, max = max(us_states$MeanSalaryAdjusted, na.rm = TRUE), value = 0),
-      numericInput("maxSalaryAdjusted", "Max Mean Salary Adjusted:", min = 0, max = max(us_states$MeanSalaryAdjusted, na.rm = TRUE), value = max(us_states$MeanSalaryAdjusted, na.rm = TRUE)),
-      numericInput("minRent", "Min Rent:", min = 0, max = max(us_states$Rent, na.rm = TRUE), value = 0),
-      numericInput("maxRent", "Max Rent:", min = 0, max = max(us_states$Rent, na.rm = TRUE), value = max(us_states$Rent, na.rm = TRUE)),
-      # Add more pairs of numeric inputs for other columns as needed
-      actionButton("applyFilter", "Filter") # Add 'Filter' action button
-    ),
-    mainPanel(
-      leafletOutput("map"),
-      tableOutput("table")
+
+ui <- dashboardPage(
+  dashboardHeader(title = "SWE Salary Analysis"),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Map", tabName = "map", icon = icon("globe")),
+      menuItem("Line Graph", tabName = "line_graph", icon = icon("line-chart"))
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "map",
+              fluidRow(
+                column(width = 3,
+                        selectInput("attribute", "Choose an attribute:", 
+                        choices = colnames(data)[-1],
+                        selected = colnames(data)[2]),
+                        selectInput("presetFilter", "Choose a preset filter:", 
+                        choices = c("No Filter", "High Salary", "Low Rent"), 
+                        selected = "No Filter"),
+                       numericInput("minSalaryAdjusted", "Min Mean SWE Salary:", min = 0, max = max(data$MeanSalaryAdjusted, na.rm = TRUE), value = 0),
+                       numericInput("maxSalaryAdjusted", "Max Mean SWE Salary:", min = 0, max = max(data$MeanSalaryAdjusted, na.rm = TRUE), value = max(data$MeanSalaryAdjusted, na.rm = TRUE)),
+                       numericInput("minRent", "Min Rent:", min = 0, max = max(data$Rent, na.rm = TRUE), value = 0),
+                       numericInput("maxRent", "Max Rent:", min = 0, max = max(data$Rent, na.rm = TRUE), value = max(data$Rent, na.rm = TRUE)),
+                       actionButton("applyFilter", "Filter")
+                ),
+                column(width = 9,
+                       leafletOutput("map")
+                )
+              ),
+              tableOutput("table")
+      ),
+      tabItem(tabName = "line_graph",
+              fluidRow(
+                column(width = 3,
+                       selectInput("attribute1", "Select Attribute 1:", choices = colnames(data)[-1]),
+                       selectInput("attribute2", "Select Attribute 2:", choices = colnames(data)[-1]),
+                       actionButton("plotGraph", "Plot Graph")
+                ),
+                column(width = 9,
+                       plotOutput("linePlot")
+                )
+              )
+      )
     )
   )
 )
 
-
-
 # Transform the datum of us_states to +proj=longlat +datum=WGS84
 us_states <- st_transform(us_states, 4326)
 
+
 server <- function(input, output, session) {
-  
+    
   filtered_states <- reactiveVal(us_states) # Create a reactive value to store the filtered states
+  
+  observe({
+    switch(input$presetFilter,
+           "No Filter" = {
+             updateNumericInput(session, "minSalaryAdjusted", value = 0)
+             updateNumericInput(session, "maxSalaryAdjusted", value = max(data$MeanSalaryAdjusted, na.rm = TRUE))
+             updateNumericInput(session, "minRent", value = 0)
+             updateNumericInput(session, "maxRent", value = max(data$Rent, na.rm = TRUE))
+           },
+           "High Salary" = {
+             updateNumericInput(session, "minSalaryAdjusted", value = 100000)
+             updateNumericInput(session, "maxSalaryAdjusted", value = max(data$MeanSalaryAdjusted, na.rm = TRUE))
+           },
+           "Low Rent" = {
+             updateNumericInput(session, "minRent", value = 0)
+             updateNumericInput(session, "maxRent", value = 1000)
+           },
+           {
+             updateNumericInput(session, "minSalaryAdjusted", value = 0)
+             updateNumericInput(session, "maxSalaryAdjusted", value = max(data$MeanSalaryAdjusted, na.rm = TRUE))
+             updateNumericInput(session, "minRent", value = 0)
+             updateNumericInput(session, "maxRent", value = max(data$Rent, na.rm = TRUE))
+           }
+    )
+  })
   
   observeEvent(input$applyFilter, {
     filtered_states(us_states) # Reset to original states when 'Filter' button is clicked
@@ -187,32 +204,51 @@ server <- function(input, output, session) {
   })
   
   output$map <- renderLeaflet({
+    # Define a color palette with a specified number of bins
+    bins <- 10  # You can adjust this number as per your requirement
+    pal <- colorBin(palette = "viridis", domain = filtered_states()[[input$attribute]], bins = bins)
+    
     leaflet(data = filtered_states()) %>%
-      addTiles() %>%
-      fitBounds(-125, 24.396308, -66.934570, 49.384358) %>%
-      addPolygons(fillColor = "lightgrey",
-                  color = "#BDBDC3", weight = 1,
-                  opacity = 1, fillOpacity = 0.7,
-                  highlight = highlightOptions(weight = 2,
-                                               color = "#666",
-                                               fillOpacity = 0.7,
-                                               bringToFront = TRUE),
-                  popup = ~paste(
-                    "<strong>State:</strong> ", STUSPS, "<br>",
-                    "<strong>Mean Salary Adjusted:</strong> $", round(MeanSalaryAdjusted, 2), "<br>",
-                    "<strong>Mean Salary Unadjusted:</strong> $", round(MeanSalaryUnadjusted, 2), "<br>",
-                    "<strong>Mean Salary:</strong> $", round(MeanSalary, 2), "<br>",
-                    "<strong>Number of Jobs:</strong> ", round(NumberJobs, 2), "<br>",
-                    "<strong>Home Price:</strong> $", round(HomePrice, 2), "<br>",
-                    "<strong>Living Cost:</strong> $", round(LivingCost, 2), "<br>",
-                    "<strong>Rent:</strong> $", round(Rent, 2), "<br>",
-                    "<strong>Plus Rent:</strong> $", round(PlusRent, 2), "<br>",
-                    "<strong>Purchasing Power:</strong> ", round(PurPower, 2)
-                  ),
-                  group = "states")
+    addTiles() %>%
+    fitBounds(-125, 24.396308, -66.934570, 49.384358) %>%
+    addPolygons(fillColor = ~pal(filtered_states()[[input$attribute]]),
+                color = "#BDBDC3", weight = 1,
+                opacity = 1, fillOpacity = 0.7,
+                highlight = highlightOptions(weight = 2,
+                                             color = "#666",
+                                             fillOpacity = 0.7,
+                                             bringToFront = TRUE),
+                popup = ~paste(
+                  "<strong>State:</strong> ", STUSPS, "<br>",
+                  "<strong>Mean Salary Adjusted:</strong> $", round(MeanSalaryAdjusted, 2), "<br>",
+                  "<strong>Mean Salary Unadjusted:</strong> $", round(MeanSalaryUnadjusted, 2), "<br>",
+                  "<strong>Mean Salary:</strong> $", round(MeanSalary, 2), "<br>",
+                  "<strong>Number of Jobs:</strong> ", round(NumberJobs, 2), "<br>",
+                  "<strong>Home Price:</strong> $", round(HomePrice, 2), "<br>",
+                  "<strong>Living Cost:</strong> $", round(LivingCost, 2), "<br>",
+                  "<strong>Rent:</strong> $", round(Rent, 2), "<br>",
+                  "<strong>Plus Rent:</strong> $", round(PlusRent, 2), "<br>",
+                  "<strong>Purchasing Power:</strong> ", round(PurPower, 2)
+                ),
+                group = "states")
   })
-}
 
+  
+  output$linePlot <- renderPlot({
+    input$plotGraph
+    
+    isolate({
+      ggplot(data, aes_string(x = input$attribute1, y = input$attribute2)) +
+        geom_point() + 
+        geom_smooth(method = "lm", se = FALSE, color = "blue") +
+        labs(y = input$attribute2, x = input$attribute1) +
+        theme_minimal()
+    })
+  })
+  
+  
+  
+}
 
 
 # Run the application
