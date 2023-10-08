@@ -63,7 +63,4 @@ This interactive App is designed for:
 
 ## 10. Appendix
 - Time Log Chart:
-![Working time logs](https://github.com/Mark-Liao305/CSC324/assets/85295108/7679dd64-78ff-4218-aa8b-af641b26466a)
-
-
-
+![Working time log](https://github.com/Mark-Liao305/CSC324/assets/85295108/c71c14f9-a7f5-4492-ab87-b4ffe17dc412)
