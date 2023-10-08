@@ -40,12 +40,10 @@ This interactive App is designed for:
 - The data is read from a CSV file named `SweSalaries.csv`.
 - The `City` column is separated into two distinct columns: `City_Name` and `State_Name`.
 - The data is then grouped by `State_Name` to calculate averages for various financial metrics.
+- The following R libraries are used for processing and visualizing the data:
+  - `readr`, `dplyr`, `tidyr`, `magrittr`, `ggplot2`, `qrcode`, `lattice`, `wordcloud2`, `shiny`, `leaflet`, `maps`, `sf`, `shinydashboard`.
 
-## 9. Dependencies and Libraries
-The following R libraries are used for processing and visualizing the data:
-- `readr`, `dplyr`, `tidyr`, `magrittr`, `ggplot2`, `qrcode`, `lattice`, `wordcloud2`, `shiny`, `leaflet`, `maps`, `sf`, `shinydashboard`.
-
-## 10. Design Decisions
+## 9. Design Decisions
 
 ### 1. **What**
 - Datasets: The primary dataset is a table of SWE salaries across different US cities.
@@ -63,7 +61,7 @@ The following R libraries are used for processing and visualizing the data:
 - Reduce: Data is aggregated by state to provide a summarized view.
 - Facet: The Shiny app provides multiple views (map and line graph) to allow users to explore different facets of the data.
 
-## 11. Appendix
+## 10. Appendix
 - Time Log Chart:
 ![Working time logs](https://github.com/Mark-Liao305/CSC324/assets/85295108/7679dd64-78ff-4218-aa8b-af641b26466a)
 
