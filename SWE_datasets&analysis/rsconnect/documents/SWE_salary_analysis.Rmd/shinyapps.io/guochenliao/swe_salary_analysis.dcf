@@ -1,0 +1,10 @@
+name: swe_salary_analysis
+title:
+username: guochenliao
+account: guochenliao
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10128316
+bundleId: 7778148
+url: https://guochenliao.shinyapps.io/swe_salary_analysis/
+version: 1
