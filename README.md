@@ -34,8 +34,8 @@ This interactive App is designed for:
 - User Interface: Add histogram page at the dashboard for better visualization
 
 ## 7. Sources or References
-- Kaggle. “U.S. Software Developer Salaries,” February 11, 2023. [Link](https://www.kaggle.com/datasets/thedevastator/u-s-software-developer-salaries).
-- Seveso, Bruno Bonfrisco Franco. “Software Developer Income/Expenses per USA City.” Zenodo, December 7, 2022. [Link](https://doi.org/10.5281/zenodo.7412091).
+- T. Devastator, “U.S. software developer salaries,” Kaggle, https://www.kaggle.com/datasets/thedevastator/u-s-software-developer-salaries (accessed Oct. 9, 2023) [Link](https://www.kaggle.com/datasets/thedevastator/u-s-software-developer-salaries). 
+- F. S. Bruno Bonfrisco, “Sofware developer income/expenses per USA City,” Zenodo, https://doi.org/10.5281/zenodo.7412091 (accessed Oct. 9, 2023).  [Link](https://doi.org/10.5281/zenodo.7412091).
 
 ## 8. Data Tidying and Pre-processing
 - The data is read from a CSV file named `SweSalaries.csv`.
