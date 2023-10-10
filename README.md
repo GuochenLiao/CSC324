@@ -34,8 +34,9 @@ This interactive App is designed for:
 - User Interface: Add histogram page at the dashboard for better visualization
 
 ## 7. Sources or References
-- T. Devastator, “U.S. software developer salaries,” Kaggle, https://www.kaggle.com/datasets/thedevastator/u-s-software-developer-salaries (accessed Oct. 9, 2023) [Link](https://www.kaggle.com/datasets/thedevastator/u-s-software-developer-salaries). 
-- F. S. Bruno Bonfrisco, “Sofware developer income/expenses per USA City,” Zenodo, https://doi.org/10.5281/zenodo.7412091 (accessed Oct. 9, 2023).  [Link](https://doi.org/10.5281/zenodo.7412091).
+- [1] T. Devastator, “U.S. software developer salaries,” Kaggle, https://www.kaggle.com/datasets/thedevastator/u-s-software-developer-salaries (accessed Oct. 9, 2023) [Link](https://www.kaggle.com/datasets/thedevastator/u-s-software-developer-salaries). 
+- [2] F. S. Bruno Bonfrisco, “Sofware developer income/expenses per USA City,” Zenodo, https://doi.org/10.5281/zenodo.7412091 (accessed Oct. 9, 2023).  [Link](https://doi.org/10.5281/zenodo.7412091).
+- [3] U. C. Bureau, “Tiger/line shapefiles,” Census.gov, https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html (accessed Oct. 10, 2023). 
 
 ## 8. Data Tidying and Pre-processing
 - The data is read from a CSV file named `SweSalaries.csv`.
