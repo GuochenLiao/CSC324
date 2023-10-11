@@ -20,9 +20,10 @@ This interactive App is designed for:
 - Job Seekers: To identify financially advantageous locations for software development careers.
 
 ## 4. Questions Trying to Answer
-- How does the salary of SWEs compare across different US states?
-- What is the precentage of rent over salary for SWEs compared to other professions?
-- What insights can be derived from the number of software developer jobs available in different cities?
+- How does the salary of SWEs compare across different states?
+- What is the percentage of salary for SWEs over other professions?
+- What is the percentage of rent over salary for SWEs compared with other professions?
+
 
 ## 5. Insights from Data
 - The rent constitutes approximately 21.4% of the total salary for a SWE, contrasting with 39.5% for average salaries across all careers.
