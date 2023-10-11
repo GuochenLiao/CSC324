@@ -1,4 +1,4 @@
-# US Software Developer Salaries Project
+# US SWE Salaries Analysis Project
 
 You can access the application via [Link](https://guochenliao.shinyapps.io/swe_salary_analysis/).
 ## 1. Project Purpose
