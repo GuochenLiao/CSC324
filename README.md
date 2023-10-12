@@ -1,6 +1,5 @@
 # US SWE Salaries Analysis Project
 
-You can access the application via [Link](https://guochenliao.shinyapps.io/swe_salary_analysis/).
 ## 1. Project Purpose
 The project aims to analyze the economic landscape for software developers across US states by examining their salaries and other financial metrics. It seeks to understand the financial advantages and disparities within the SWE compared to other careers.
 
